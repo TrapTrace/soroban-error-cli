@@ -1,10 +1,15 @@
-# TrapTrace CLI (`soroban-error-cli`)
+<div align="center">
 
-![CI Workflow](https://github.com/TrapTrace/soroban-error-cli/actions/workflows/ci.yml/badge.svg)
-![License](https://img.shields.io/badge/License-MIT-teal.svg)
-![PyPI](https://img.shields.io/badge/Python-3.8%2B-blue.svg)
+# ⚡ TrapTrace CLI — Terminal Error Explainer
 
-**TrapTrace CLI** (`soroban-explain`) is a lightweight, high-speed terminal utility that decodes cryptic Soroban VM traps, CLI errors, RPC simulation failures, and SDK conversion issues directly in your local terminal workflow.
+**A lightweight, high-speed terminal utility (`soroban-explain`) to decode Soroban VM traps, CLI errors, RPC simulation failures, and SDK conversion issues.**
+
+[![CI Workflow](https://img.shields.io/github/actions/workflow/status/TrapTrace/soroban-error-cli/ci.yml?branch=main&style=flat-square&color=2FA98C&label=CI%20Workflow)](https://github.com/TrapTrace/soroban-error-cli/actions)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-1B1F23?style=flat-square)](https://python.org)
+[![License](https://img.shields.io/badge/License-MIT-2FA98C?style=flat-square)](./LICENSE)
+[![Stellar Wave](https://img.shields.io/badge/Drips%20Wave-8%20Target-E2984B?style=flat-square)](https://drips.network)
+
+</div>
 
 ---
 
