@@ -4,19 +4,33 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "traptrace-cli"
-version = "0.1.0"
-description = "CLI error lookup and diagnostic tool for Stellar Soroban developers"
+version = "0.2.0"
+description = "Operational diagnostic engine, transaction inspector, and error resolver for Stellar Soroban"
 readme = "README.md"
-authors = [{ name = "TrapTrace Team" }]
+authors = [{ name = "TrapTrace Team", email = "dev@traptrace.dev" }]
 license = { text = "MIT" }
+keywords = ["stellar", "soroban", "smart-contracts", "cli", "error-index", "diagnostics", "xdr", "debugging"]
 classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Topic :: Software Development :: Debuggers",
 ]
 requires-python = ">=3.8"
 dependencies = []
+
+[project.urls]
+Homepage = "https://traptrace-explorer.vercel.app"
+Repository = "https://github.com/TrapTrace/soroban-error-cli"
+Documentation = "https://github.com/TrapTrace"
 
 [project.scripts]
 soroban-explain = "traptrace_cli.cli:main"
