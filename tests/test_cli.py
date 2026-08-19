@@ -43,3 +43,25 @@ def test_render_formatter():
     assert "test-error" in output
     assert "Test Error Title" in output
     assert "✔ Verified" in output
+
+def test_ranked_search_scores():
+    entries = load_entries()
+    results = search_errors(entries, query="budget", include_scores=True)
+    assert len(results) > 0
+    assert "_score" in results[0]
+    assert results[0]["_score"] > 20.0
+    assert results[0]["id"] == "budget-exceeded"
+
+def test_typo_tolerant_search():
+    entries = load_entries()
+    # Misspelled query 'budgt' should still rank 'budget-exceeded'
+    results = search_errors(entries, query="budgt")
+    assert len(results) > 0
+    assert any(r["id"] == "budget-exceeded" for r in results)
+
+def test_export_output_helper(tmp_path):
+    from traptrace_cli.cli import export_output
+    export_file = tmp_path / "test_report.md"
+    export_output("# Test Markdown Report", str(export_file))
+    assert export_file.exists()
+    assert export_file.read_text(encoding="utf-8") == "# Test Markdown Report"

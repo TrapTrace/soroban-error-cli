@@ -25,9 +25,23 @@ from traptrace_cli.watcher import ContractEventWatcher
 from traptrace_cli.storage_auditor import StorageAuditor
 from traptrace_cli.xdr_decoder import decode_diagnostic_event
 
+def export_output(content_str: str, file_path: Optional[str] = None):
+    if file_path:
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(content_str)
+        print(f"\n✅ Diagnostic report saved to: {file_path}\n")
+    else:
+        print(content_str)
+
 def handle_explain(args, client: Optional[SorobanRpcClient] = None):
     entries = load_entries(custom_dir=args.index_path)
-    results = search_errors(entries, query=args.query, category=args.category, verified_only=args.verified)
+    results = search_errors(
+        entries, 
+        query=args.query, 
+        category=args.category, 
+        verified_only=args.verified,
+        include_scores=args.rank
+    )
     
     if args.json:
         print(json.dumps(results, indent=2))
@@ -41,31 +55,51 @@ def handle_explain(args, client: Optional[SorobanRpcClient] = None):
     print(f"Found {len(results)} matching error catalog entries:\n")
     
     for idx, entry in enumerate(results, 1):
-        print(f"{idx}. " + render_entry_terminal(entry, detailed=args.detailed or len(results) == 1))
+        score_info = f" [Score: {entry.get('_score', 0):.1f}]" if args.rank else ""
+        print(f"{idx}. {BOLD}{entry.get('title')}{RESET}{score_info}")
+        print(render_entry_terminal(entry, detailed=args.detailed or len(results) == 1))
         print()
 
 def handle_inspect(args, client: SorobanRpcClient):
     inspector = TransactionInspector(rpc_client=client)
     report = inspector.inspect(args.tx_hash)
     
-    if args.json:
-        print(json.dumps(report, indent=2))
+    if getattr(args, "export_json", None) or args.json:
+        json_str = json.dumps(report, indent=2)
+        if getattr(args, "export_json", None):
+            export_output(json_str, args.export_json)
+        else:
+            print(json_str)
         return
         
+    md_content = render_inspection_report(report)
+    if getattr(args, "export_md", None):
+        export_output(md_content, args.export_md)
+        return
+
     print()
-    print(render_inspection_report(report))
+    print(md_content)
     print()
 
 def handle_simulate(args, client: SorobanRpcClient):
     simulator = TransactionSimulator(rpc_client=client)
     report = simulator.simulate(args.xdr, resource_leeway=args.leeway)
     
-    if args.json:
-        print(json.dumps(report, indent=2))
+    if getattr(args, "export_json", None) or args.json:
+        json_str = json.dumps(report, indent=2)
+        if getattr(args, "export_json", None):
+            export_output(json_str, args.export_json)
+        else:
+            print(json_str)
         return
         
+    md_content = render_simulation_report(report)
+    if getattr(args, "export_md", None):
+        export_output(md_content, args.export_md)
+        return
+
     print()
-    print(render_simulation_report(report))
+    print(md_content)
     print()
 
 def handle_decode(args, client: Optional[SorobanRpcClient] = None):
@@ -111,12 +145,21 @@ def handle_storage(args, client: SorobanRpcClient):
     auditor = StorageAuditor(rpc_client=client)
     report = auditor.audit_contract_keys(contract_id=args.contract, xdr_keys=args.keys)
     
-    if args.json:
-        print(json.dumps(report, indent=2))
+    if getattr(args, "export_json", None) or args.json:
+        json_str = json.dumps(report, indent=2)
+        if getattr(args, "export_json", None):
+            export_output(json_str, args.export_json)
+        else:
+            print(json_str)
         return
         
+    md_content = render_storage_report(report)
+    if getattr(args, "export_md", None):
+        export_output(md_content, args.export_md)
+        return
+
     print()
-    print(render_storage_report(report))
+    print(md_content)
     print()
 
 def main():
@@ -136,17 +179,22 @@ def main():
     p_explain.add_argument("query", nargs="?", default="", help="Error string, code, or keyword")
     p_explain.add_argument("-c", "--category", choices=["host-error", "cli-error", "rpc-error", "sdk-error"], help="Filter by category")
     p_explain.add_argument("-v", "--verified", action="store_true", help="Show verified entries only")
+    p_explain.add_argument("-r", "--rank", action="store_true", help="Display relevance score ranking for results")
     p_explain.add_argument("-d", "--detailed", action="store_true", help="Show full symptoms and solutions")
     p_explain.add_argument("--index-path", help="Path to local soroban-error-index directory")
     
     # inspect (tx hash)
     p_inspect = subparsers.add_parser("inspect", help="Inspect an on-chain transaction by hash and diagnose failure traces")
     p_inspect.add_argument("tx_hash", help="Transaction hash (hex string)")
+    p_inspect.add_argument("--export-md", help="Export inspection diagnosis as Markdown file")
+    p_inspect.add_argument("--export-json", help="Export inspection report as JSON file")
     
     # simulate (xdr pre-flight)
     p_simulate = subparsers.add_parser("simulate", help="Run pre-flight simulation for transaction envelope XDR")
     p_simulate.add_argument("xdr", help="Base64 encoded transaction envelope XDR")
     p_simulate.add_argument("--leeway", type=int, help="Optional CPU instruction leeway")
+    p_simulate.add_argument("--export-md", help="Export simulation analysis as Markdown file")
+    p_simulate.add_argument("--export-json", help="Export simulation report as JSON file")
     
     # decode (xdr decoder)
     p_decode = subparsers.add_parser("decode", help="Decode base64 Soroban DiagnosticEvent XDR")
@@ -162,6 +210,8 @@ def main():
     p_storage = subparsers.add_parser("storage", help="Audit contract storage keys and TTL expiration health")
     p_storage.add_argument("-c", "--contract", required=True, help="Contract ID")
     p_storage.add_argument("-k", "--keys", nargs="*", help="Storage key XDR strings to inspect")
+    p_storage.add_argument("--export-md", help="Export storage report as Markdown file")
+    p_storage.add_argument("--export-json", help="Export storage report as JSON file")
 
     # If first arg is not a known subcommand and doesn't start with '-', default to 'explain'
     raw_args = sys.argv[1:]
@@ -190,6 +240,7 @@ def main():
             args.query = ""
             args.category = None
             args.verified = False
+            args.rank = False
             args.detailed = False
             args.index_path = None
         handle_explain(args, client)
