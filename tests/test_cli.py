@@ -9,11 +9,12 @@ from traptrace_cli.formatter import render_entry_terminal
 
 def test_load_bundled_entries():
     entries = load_entries()
-    assert len(entries) >= 11
+    assert len(entries) >= 12
     ids = [e["id"] for e in entries]
     assert "budget-exceeded" in ids
     assert "entry-archived-ttl-expired" in ids
     assert "host-invalid-action" in ids
+    assert "storage-ledger-entry-not-found" in ids
 
 def test_search_by_keyword():
     entries = load_entries()
