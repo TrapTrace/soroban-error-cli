@@ -135,6 +135,17 @@ BUNDLED_ENTRIES = [
     "tags": ["storage", "ledger-entry", "missing-value", "persistent", "temporary", "instance", "host-error"],
     "symptoms": "Contract invocation halts with HostError(Error(Storage, MissingValue)).",
     "solutions": "Use get_or pattern (.unwrap_or); check key existence with .has(); return Option<T>."
+  },
+  {
+    "id": "contract-data-size-exceeds-limit",
+    "title": "Host Error - Contract Data Size Exceeds Ledger Entry Limit",
+    "category": "host-error",
+    "error_code": "HostError::StorageValueExceedsLimit",
+    "verified": True,
+    "summary": "Contract execution terminated because an attempted storage write or data structure serialization exceeded the maximum protocol ledger entry byte limit (64KB).",
+    "tags": ["storage", "size-limit", "64kb", "contract-data", "payload", "host-error"],
+    "symptoms": "Transaction simulation returns HostError(Error(Storage, ExceededLimit)).",
+    "solutions": "Partition state across keys; split payloads into chunks; store hashes and retain raw data off-chain."
   }
 ]
 

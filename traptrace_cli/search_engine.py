@@ -15,7 +15,7 @@ def search_errors(
 ) -> List[Dict[str, Any]]:
     results = []
     
-    query = (query or "").strip().lower()
+    query = (query or "").strip()
     
     for entry in entries:
         if category and entry.get("category") != category:
@@ -43,6 +43,10 @@ def search_errors(
 
 def calculate_match_score(entry: Dict[str, Any], query: str) -> float:
     score = 0.0
+    original_query = query.strip()
+    q = original_query.lower()
+    if not q:
+        return 1.0
     
     id_str = str(entry.get("id", "")).lower()
     title = str(entry.get("title", "")).lower()
@@ -54,48 +58,65 @@ def calculate_match_score(entry: Dict[str, Any], query: str) -> float:
     body = str(entry.get("body", "")).lower()
 
     # 1. Exact full-match bonus
-    if query == id_str or query == code:
+    if q == id_str or q == code:
         score += 50.0
-    elif query in id_str:
+    elif q in id_str:
+        score += 30.0
+    elif q in code:
         score += 25.0
-    elif query in code:
-        score += 20.0
         
-    if query in title:
+    if q in title:
+        score += 20.0
+    if any(q in tag for tag in tags):
         score += 15.0
-    if any(query in tag for tag in tags):
+    if q in summary:
         score += 10.0
-    if query in summary:
+    if q in symptoms:
         score += 8.0
-    if query in symptoms:
+    if q in solutions or q in body:
         score += 5.0
-    if query in solutions or query in body:
-        score += 3.0
 
-    # 2. Tokenized search for multi-word queries
-    tokens = [t for t in re.split(r"[\s\:\(\)\_\-\,\#\.]+", query) if len(t) > 2]
-    for tok in tokens:
+    # 2. Tokenized search with CamelCase / PascalCase sub-word decomposition
+    raw_tokens = [t for t in re.split(r"[\s\:\(\)\_\-\,\#\.\/\@]+", original_query) if t]
+    extracted_tokens = set()
+    for tok in raw_tokens:
+        if len(tok) > 2:
+            extracted_tokens.add(tok.lower())
+        camel_parts = re.findall(r'[A-Z]?[a-z]+|[A-Z]+(?=[A-Z][a-z]|\d|\W|$)|\d+', tok)
+        for cp in camel_parts:
+            if len(cp) > 2:
+                extracted_tokens.add(cp.lower())
+
+    for tok in extracted_tokens:
         matched_tok = False
-        if tok in id_str:
+        id_words = set(id_str.split("-"))
+        if tok in id_words:
+            score += 15.0
+            matched_tok = True
+        elif tok in id_str:
             score += 10.0
             matched_tok = True
+
         if tok in code:
-            score += 8.0
+            score += 10.0
             matched_tok = True
         if tok in title:
+            score += 8.0
+            matched_tok = True
+        if any(tok == tag for tag in tags):
+            score += 10.0
+            matched_tok = True
+        elif any(tok in tag for tag in tags):
             score += 6.0
             matched_tok = True
-        if any(tok in tag for tag in tags):
-            score += 5.0
-            matched_tok = True
         if tok in summary:
-            score += 3.0
+            score += 4.0
             matched_tok = True
         if tok in symptoms:
-            score += 2.0
+            score += 3.0
             matched_tok = True
         if tok in solutions or tok in body:
-            score += 1.0
+            score += 2.0
             matched_tok = True
             
         # 3. Typo-tolerant fuzzy matching for tokens that didn't match directly
