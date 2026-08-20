@@ -124,6 +124,17 @@ BUNDLED_ENTRIES = [
     "tags": ["host-error", "invalid-action", "host-functions", "validation", "crypto"],
     "symptoms": "Transaction simulation returns HostError(Error(Context, InvalidAction)).",
     "solutions": "Verify cryptographic key/signature lengths; limit event topics to 4 maximum; validate raw Val handles."
+  },
+  {
+    "id": "storage-ledger-entry-not-found",
+    "title": "Host Error - Storage Ledger Entry Not Found or Missing Value",
+    "category": "host-error",
+    "error_code": "HostError::StorageNotFound",
+    "verified": True,
+    "summary": "Contract attempted to read a non-existent or uninitialized key from instance, persistent, or temporary storage without fallback handling.",
+    "tags": ["storage", "ledger-entry", "missing-value", "persistent", "temporary", "instance", "host-error"],
+    "symptoms": "Contract invocation halts with HostError(Error(Storage, MissingValue)).",
+    "solutions": "Use get_or pattern (.unwrap_or); check key existence with .has(); return Option<T>."
   }
 ]
 
