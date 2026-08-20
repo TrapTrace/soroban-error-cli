@@ -9,7 +9,7 @@ from traptrace_cli.formatter import render_entry_terminal
 
 def test_load_bundled_entries():
     entries = load_entries()
-    assert len(entries) >= 16
+    assert len(entries) >= 18
     ids = [e["id"] for e in entries]
     assert "budget-exceeded" in ids
     assert "entry-archived-ttl-expired" in ids
@@ -19,6 +19,8 @@ def test_load_bundled_entries():
     assert "wasm-memory-exhausted" in ids
     assert "auth-invalid-signature" in ids
     assert "sub-invocation-user-error" in ids
+    assert "require-auth-missing" in ids
+    assert "arith-error" in ids
 
 def test_search_by_keyword():
     entries = load_entries()
