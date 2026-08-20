@@ -157,6 +157,17 @@ BUNDLED_ENTRIES = [
     "tags": ["wasm", "memory", "linear-memory", "pages", "out-of-memory", "host-error"],
     "symptoms": "Transaction simulation terminates with HostError(Error(Budget, Exceeded)) or memory page limit reached.",
     "solutions": "Use host collections (soroban_sdk::Vec); stream data in batches; avoid deep recursion."
+  },
+  {
+    "id": "auth-invalid-signature",
+    "title": "Host Error - Contract Authorization Invalid Signature",
+    "category": "host-error",
+    "error_code": "HostError::AuthInvalidSignature",
+    "verified": True,
+    "summary": "Transaction execution or simulation aborted because an authorization entry signature failed cryptographic verification against the required signer address or public key.",
+    "tags": ["auth", "signature", "ed25519", "secp256k1", "verification", "require-auth", "host-error"],
+    "symptoms": "Transaction simulation returns HostError(Error(Auth, InvalidAction)) or Signature verification failed.",
+    "solutions": "Verify signer matches Address; simulate auth tree before signing; verify network passphrase."
   }
 ]
 
