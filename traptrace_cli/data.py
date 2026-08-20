@@ -146,6 +146,17 @@ BUNDLED_ENTRIES = [
     "tags": ["storage", "size-limit", "64kb", "contract-data", "payload", "host-error"],
     "symptoms": "Transaction simulation returns HostError(Error(Storage, ExceededLimit)).",
     "solutions": "Partition state across keys; split payloads into chunks; store hashes and retain raw data off-chain."
+  },
+  {
+    "id": "wasm-memory-exhausted",
+    "title": "Host Error - WASM VM Memory Page Allocation Exhausted",
+    "category": "host-error",
+    "error_code": "HostError::MemoryExhausted",
+    "verified": True,
+    "summary": "Contract execution halted because total WASM linear memory pages allocated at runtime exceeded the Soroban VM memory cap.",
+    "tags": ["wasm", "memory", "linear-memory", "pages", "out-of-memory", "host-error"],
+    "symptoms": "Transaction simulation terminates with HostError(Error(Budget, Exceeded)) or memory page limit reached.",
+    "solutions": "Use host collections (soroban_sdk::Vec); stream data in batches; avoid deep recursion."
   }
 ]
 
