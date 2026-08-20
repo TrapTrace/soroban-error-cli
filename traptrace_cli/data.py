@@ -179,6 +179,28 @@ BUNDLED_ENTRIES = [
     "tags": ["cross-contract", "sub-invocation", "custom-error", "contracterror", "bubbling", "host-error"],
     "symptoms": "Transaction simulation terminates with HostError(Error(Contract, 1)).",
     "solutions": "Catch and handle errors in caller (try_invoke); inspect callee contracterror definition; trace with traptrace inspect."
+  },
+  {
+    "id": "require-auth-missing",
+    "title": "Host Error - Missing Required Invocation Authorization",
+    "category": "host-error",
+    "error_code": "HostError::AuthMissing",
+    "verified": True,
+    "summary": "Contract execution halted because an operation required explicit authorization from an Address that was not provided in the invocation auth tree.",
+    "tags": ["auth", "require-auth", "authorization", "security", "permissions", "host-error"],
+    "symptoms": "Transaction simulation terminates with HostError(Error(Auth, InvalidAction)) or require_auth failed for address.",
+    "solutions": "Include required auth entries after simulating; wrap child calls in require_auth_for_args; inspect auth tree."
+  },
+  {
+    "id": "arith-error",
+    "title": "Host Error - Integer Arithmetic Overflow, Underflow, or Division by Zero",
+    "category": "host-error",
+    "error_code": "HostError::ArithDomain",
+    "verified": True,
+    "summary": "Contract execution panicked due to an arithmetic domain error such as integer overflow, underflow, or division by zero in WASM.",
+    "tags": ["arithmetic", "overflow", "underflow", "divide-by-zero", "math", "host-error"],
+    "symptoms": "Contract simulation or execution aborts with HostError(Error(Context, InvalidAction)) or arithmetic overflow panic.",
+    "solutions": "Use checked arithmetic methods (checked_add, checked_sub); use saturating arithmetic; add explicit zero checks."
   }
 ]
 
