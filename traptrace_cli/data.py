@@ -168,6 +168,17 @@ BUNDLED_ENTRIES = [
     "tags": ["auth", "signature", "ed25519", "secp256k1", "verification", "require-auth", "host-error"],
     "symptoms": "Transaction simulation returns HostError(Error(Auth, InvalidAction)) or Signature verification failed.",
     "solutions": "Verify signer matches Address; simulate auth tree before signing; verify network passphrase."
+  },
+  {
+    "id": "sub-invocation-user-error",
+    "title": "Host Error - User-Defined Contract Error in Cross-Contract Sub-Invocation",
+    "category": "host-error",
+    "error_code": "HostError::ContractUserError",
+    "verified": True,
+    "summary": "Cross-contract execution reverted because the callee contract returned an explicit user-defined contract error enum discriminant.",
+    "tags": ["cross-contract", "sub-invocation", "custom-error", "contracterror", "bubbling", "host-error"],
+    "symptoms": "Transaction simulation terminates with HostError(Error(Contract, 1)).",
+    "solutions": "Catch and handle errors in caller (try_invoke); inspect callee contracterror definition; trace with traptrace inspect."
   }
 ]
 
