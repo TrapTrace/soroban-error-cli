@@ -113,6 +113,17 @@ BUNDLED_ENTRIES = [
     "tags": ["sdk", "scval", "xdr", "conversion", "sdk-error"],
     "symptoms": "Cannot convert ScVal to native type.",
     "solutions": "Use type-safe generated bindings (soroban contract bindings); verify ScVal variant."
+  },
+  {
+    "id": "host-invalid-action",
+    "title": "Host Error - Invalid Action or Host Invariant Violation",
+    "category": "host-error",
+    "error_code": "HostError::InvalidAction",
+    "verified": True,
+    "summary": "Contract execution failed because a host function was called with invalid domain arguments or violated host state invariants.",
+    "tags": ["host-error", "invalid-action", "host-functions", "validation", "crypto"],
+    "symptoms": "Transaction simulation returns HostError(Error(Context, InvalidAction)).",
+    "solutions": "Verify cryptographic key/signature lengths; limit event topics to 4 maximum; validate raw Val handles."
   }
 ]
 
