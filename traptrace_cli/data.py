@@ -201,6 +201,39 @@ BUNDLED_ENTRIES = [
     "tags": ["arithmetic", "overflow", "underflow", "divide-by-zero", "math", "host-error"],
     "symptoms": "Contract simulation or execution aborts with HostError(Error(Context, InvalidAction)) or arithmetic overflow panic.",
     "solutions": "Use checked arithmetic methods (checked_add, checked_sub); use saturating arithmetic; add explicit zero checks."
+  },
+  {
+    "id": "invalid-chain-id",
+    "title": "CLI Error - Network Passphrase or Chain ID Mismatch",
+    "category": "cli-error",
+    "error_code": "CLI::InvalidChainId",
+    "verified": True,
+    "summary": "Transaction simulation or submission rejected because the transaction network passphrase hash does not match the target Stellar node network ID.",
+    "tags": ["network", "chain-id", "passphrase", "testnet", "mainnet", "futurenet", "cli-error"],
+    "symptoms": "Transaction signature verification failed for target network; passphrase hash mismatch.",
+    "solutions": "Explicitly specify --network testnet or --network mainnet; verify STELLAR_NETWORK_PASSPHRASE matches node."
+  },
+  {
+    "id": "crypto-verification-failed",
+    "title": "Host Error - Cryptographic Signature or Curve Verification Failed",
+    "category": "host-error",
+    "error_code": "HostError::CryptoError",
+    "verified": True,
+    "summary": "Smart contract execution panicked during host cryptographic primitives verification (such as env.crypto().ed25519_verify) due to an invalid signature, corrupted public key, or payload mismatch.",
+    "tags": ["crypto", "ed25519", "secp256k1", "signature", "verification", "curve", "host-error"],
+    "symptoms": "Contract aborts with HostError(Error(Crypto, InvalidInput)) or ed25519 verification failed.",
+    "solutions": "Verify exact message hashing; validate BytesN<32> and BytesN<64> buffer lengths; use CustomAccountInterface."
+  },
+  {
+    "id": "wasm-verification-failed",
+    "title": "CLI Error - Contract WASM Module Bytecode Verification Failed",
+    "category": "cli-error",
+    "error_code": "CLI::WasmVerificationFailed",
+    "verified": True,
+    "summary": "Contract upload or installation failed because the compiled WASM binary violates Soroban VM constraints, contains unsupported floating-point operations, or imports unexported host interfaces.",
+    "tags": ["wasm", "bytecode", "verification", "deployment", "install", "upload", "cli-error"],
+    "symptoms": "CLI displays error: contract wasm verification failed: invalid import or unsupported opcode.",
+    "solutions": "Build with stellar contract build; ensure #![no_std] compliance; run wasm-tools validate or traptrace decode."
   }
 ]
 
