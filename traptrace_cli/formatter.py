@@ -91,17 +91,20 @@ def render_inspection_report(report: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 def render_simulation_report(report: Dict[str, Any]) -> str:
+    from traptrace_cli.tui import render_resource_dashboard
     lines = []
     lines.append(f"{TEAL}{BOLD}⚡ TrapTrace Pre-Flight Simulation Report{RESET}")
     lines.append(f"Network: {CYAN}{report.get('network')}{RESET} | Latest Ledger: #{report.get('latest_ledger')}")
     
     if report.get("success"):
         lines.append(f"Status:  {GREEN}{BOLD}✔ SIMULATION PASSED{RESET}\n")
-        lines.append(f"{BOLD}Resource Consumption & Costs:{RESET}")
-        lines.append(f"  • CPU Instructions:  {CYAN}{report.get('cpu_instructions', 0):,}{RESET}")
-        lines.append(f"  • Memory Bytes:      {CYAN}{report.get('mem_bytes', 0):,} bytes{RESET}")
+        cpu = report.get('cpu_instructions', 0)
+        mem = report.get('mem_bytes', 0)
+        lines.append(render_resource_dashboard(cpu_insns=cpu, mem_bytes=mem))
+        lines.append("")
+        lines.append(f"{BOLD}Transaction Constraints & Auth Requirements:{RESET}")
         lines.append(f"  • Min Resource Fee:  {AMBER}{report.get('min_resource_fee', '0')} stroops{RESET}")
-        lines.append(f"  • Auth Requirements: {report.get('auth_count', 0)} signature(s)")
+        lines.append(f"  • Auth Signatures:   {report.get('auth_count', 0)} signature(s)")
     else:
         lines.append(f"Status:  {RED}{BOLD}✖ SIMULATION REVERTED / TRAPPED{RESET}\n")
         lines.append(f"{RED}{BOLD}Error Message:{RESET} {report.get('error_message')}\n")
