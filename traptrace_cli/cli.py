@@ -24,6 +24,19 @@ from traptrace_cli.simulator import TransactionSimulator
 from traptrace_cli.watcher import ContractEventWatcher
 from traptrace_cli.storage_auditor import StorageAuditor
 from traptrace_cli.xdr_decoder import decode_diagnostic_event
+from traptrace_cli.batch_inspector import (
+    BatchInspector,
+    render_batch_report_terminal,
+    render_batch_report_markdown
+)
+from traptrace_cli.auth_checker import (
+    AuthChecker,
+    render_auth_report_terminal
+)
+from traptrace_cli.fix_generator import (
+    FixGenerator,
+    render_fix_terminal
+)
 
 def export_output(content_str: str, file_path: Optional[str] = None):
     if file_path:
@@ -162,6 +175,65 @@ def handle_storage(args, client: SorobanRpcClient):
     print(md_content)
     print()
 
+def handle_batch_inspect(args, client: SorobanRpcClient):
+    inspector = BatchInspector(rpc_client=client)
+    if getattr(args, "file", None):
+        report = inspector.inspect_file(args.file, max_limit=args.limit)
+    else:
+        report = inspector.inspect_hashes(args.hashes)
+        
+    if getattr(args, "export_json", None) or args.json:
+        json_str = json.dumps(report, indent=2)
+        if getattr(args, "export_json", None):
+            export_output(json_str, args.export_json)
+        else:
+            print(json_str)
+        return
+        
+    if getattr(args, "export_md", None):
+        md_content = render_batch_report_markdown(report)
+        export_output(md_content, args.export_md)
+        return
+
+    print(render_batch_report_terminal(report))
+
+def handle_auth_check(args, client: SorobanRpcClient):
+    checker = AuthChecker(rpc_client=client)
+    report = checker.check_xdr(args.xdr)
+    
+    if getattr(args, "export_json", None) or args.json:
+        json_str = json.dumps(report, indent=2)
+        if getattr(args, "export_json", None):
+            export_output(json_str, args.export_json)
+        else:
+            print(json_str)
+        return
+        
+    print(render_auth_report_terminal(report))
+
+def handle_fix(args, client: Optional[SorobanRpcClient] = None):
+    generator = FixGenerator()
+    fix_data = generator.get_fix(args.error_id)
+    
+    if not fix_data:
+        all_snippets = generator.generate_all()
+        print(f"\n❌ No direct auto-fix snippet found for '{args.error_id}'.")
+        print(f"\n{BOLD}Available Auto-Fix Remediation Templates ({len(all_snippets)}):{RESET}")
+        for k, v in all_snippets.items():
+            print(f"  • {CYAN}traptrace fix {k:<25}{RESET} -> {v.get('title')}")
+        print()
+        sys.exit(1)
+        
+    if args.json:
+        print(json.dumps(fix_data, indent=2))
+        return
+        
+    if getattr(args, "export_rs", None):
+        export_output(fix_data.get("fix_code", ""), args.export_rs)
+        return
+        
+    print(render_fix_terminal(args.error_id, fix_data))
+
 def main():
     parser = argparse.ArgumentParser(
         prog="traptrace",
@@ -189,12 +261,30 @@ def main():
     p_inspect.add_argument("--export-md", help="Export inspection diagnosis as Markdown file")
     p_inspect.add_argument("--export-json", help="Export inspection report as JSON file")
     
+    # batch-inspect (multi-tx diagnostics)
+    p_batch = subparsers.add_parser("batch-inspect", help="Run multi-transaction diagnostics from a JSON dataset or hash list")
+    p_batch.add_argument("hashes", nargs="*", help="Transaction hashes to inspect")
+    p_batch.add_argument("-f", "--file", help="Path to JSON file containing list of transaction hashes")
+    p_batch.add_argument("--limit", type=int, help="Maximum number of transactions to inspect")
+    p_batch.add_argument("--export-md", help="Export batch diagnostic report as Markdown file")
+    p_batch.add_argument("--export-json", help="Export batch diagnostic report as JSON file")
+    
     # simulate (xdr pre-flight)
     p_simulate = subparsers.add_parser("simulate", help="Run pre-flight simulation for transaction envelope XDR")
     p_simulate.add_argument("xdr", help="Base64 encoded transaction envelope XDR")
     p_simulate.add_argument("--leeway", type=int, help="Optional CPU instruction leeway")
     p_simulate.add_argument("--export-md", help="Export simulation analysis as Markdown file")
     p_simulate.add_argument("--export-json", help="Export simulation report as JSON file")
+    
+    # auth-check (contract auth tree validator)
+    p_auth = subparsers.add_parser("auth-check", help="Simulate and validate contract invocation authorization trees")
+    p_auth.add_argument("xdr", help="Base64 encoded transaction envelope XDR to validate")
+    p_auth.add_argument("--export-json", help="Export authorization tree diagnosis as JSON file")
+    
+    # fix (auto-fix snippet generator)
+    p_fix = subparsers.add_parser("fix", help="Generate idiomatic Rust/Soroban remediation code snippets for catalog errors")
+    p_fix.add_argument("error_id", help="Error catalog ID (e.g. arith-error, require-auth-missing)")
+    p_fix.add_argument("--export-rs", help="Export remediation code snippet directly to a Rust file (.rs)")
     
     # decode (xdr decoder)
     p_decode = subparsers.add_parser("decode", help="Decode base64 Soroban DiagnosticEvent XDR")
@@ -214,8 +304,9 @@ def main():
     p_storage.add_argument("--export-json", help="Export storage report as JSON file")
 
     # If first arg is not a known subcommand and doesn't start with '-', default to 'explain'
+    known_cmds = ["explain", "inspect", "batch-inspect", "simulate", "auth-check", "fix", "decode", "watch", "storage", "-h", "--help", "--network", "--rpc-url", "--json"]
     raw_args = sys.argv[1:]
-    if raw_args and raw_args[0] not in ["explain", "inspect", "simulate", "decode", "watch", "storage", "-h", "--help", "--network", "--rpc-url", "--json"]:
+    if raw_args and raw_args[0] not in known_cmds:
         raw_args = ["explain"] + raw_args
         
     args = parser.parse_args(raw_args)
@@ -226,8 +317,14 @@ def main():
     
     if args.subcommand == "inspect":
         handle_inspect(args, client)
+    elif args.subcommand == "batch-inspect":
+        handle_batch_inspect(args, client)
     elif args.subcommand == "simulate":
         handle_simulate(args, client)
+    elif args.subcommand == "auth-check":
+        handle_auth_check(args, client)
+    elif args.subcommand == "fix":
+        handle_fix(args, client)
     elif args.subcommand == "decode":
         handle_decode(args, client)
     elif args.subcommand == "watch":

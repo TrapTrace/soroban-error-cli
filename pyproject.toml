@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "traptrace-cli"
-version = "0.2.0"
+version = "0.3.0"
 description = "Operational diagnostic engine, transaction inspector, and error resolver for Stellar Soroban"
 readme = "README.md"
 authors = [{ name = "TrapTrace Team", email = "dev@traptrace.dev" }]
