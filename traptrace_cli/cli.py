@@ -16,7 +16,7 @@ from traptrace_cli.formatter import (
     render_inspection_report,
     render_simulation_report,
     render_storage_report,
-    BOLD, RESET, TEAL, CYAN, RED
+    BOLD, RESET, TEAL, CYAN, RED, YELLOW
 )
 from traptrace_cli.rpc_client import SorobanRpcClient
 from traptrace_cli.inspector import TransactionInspector
@@ -228,11 +228,78 @@ def handle_fix(args, client: Optional[SorobanRpcClient] = None):
         print(json.dumps(fix_data, indent=2))
         return
         
-    if getattr(args, "export_rs", None):
-        export_output(fix_data.get("fix_code", ""), args.export_rs)
+def handle_lint(args, client: Optional[SorobanRpcClient] = None):
+    from traptrace_cli.linter import lint_file
+    result = lint_file(args.file)
+    if args.json:
+        print(json.dumps(result, indent=2))
         return
         
-    print(render_fix_terminal(args.error_id, fix_data))
+    print(f"\n{TEAL}{BOLD}⚡ TrapTrace Soroban Smart Contract Linter{RESET}")
+    print(f"Target: {BOLD}{args.file}{RESET} | Findings: {result['total_findings']} (Critical: {RED}{result['critical_count']}{RESET}, Warning: {YELLOW}{result['warning_count']}{RESET})\n")
+    
+    if not result["findings"]:
+        print("✅ No common Soroban anti-patterns or trap conditions detected.\n")
+        return
+        
+    for f in result["findings"]:
+        sev_color = RED if f["severity"] == "CRITICAL" else YELLOW
+        print(f"  {sev_color}[{f['severity']}]{RESET} {BOLD}{f['rule_id']}: {f['name']}{RESET} (line {f['line_num']})")
+        print(f"    Code: {CYAN}{f['line_content']}{RESET}")
+        print(f"    Issue: {f['message']}")
+        print(f"    Fix: {f['remediation']}")
+        print(f"    Catalog Guide: {BOLD}traptrace explain {f['error_id']}{RESET}\n")
+
+def handle_profile(args, client: SorobanRpcClient):
+    from traptrace_cli.profiler import profile_simulation_result, render_ascii_flamegraph
+    simulator = TransactionSimulator(rpc_client=client)
+    sim_res = simulator.simulate(args.xdr)
+    profile = profile_simulation_result(sim_res.get("raw_simulation", {}))
+    
+    if args.json:
+        print(json.dumps(profile.to_dict(), indent=2))
+        return
+        
+    print()
+    print(render_ascii_flamegraph(profile))
+    print()
+
+def handle_generate_test(args, client: Optional[SorobanRpcClient] = None):
+    from traptrace_cli.test_generator import generate_rust_test
+    test_fixture = generate_rust_test(args.error_id)
+    
+    if args.json:
+        print(json.dumps(test_fixture, indent=2))
+        return
+        
+    if getattr(args, "export_rs", None):
+        export_output(test_fixture["code"], args.export_rs)
+        return
+        
+    print(f"\n{TEAL}{BOLD}⚡ TrapTrace Rust Unit Test Fixture: {test_fixture['title']}{RESET}\n")
+    print(test_fixture["code"])
+    print()
+
+def handle_health(args, client: Optional[SorobanRpcClient] = None):
+    from traptrace_cli.health import check_all_networks, check_endpoint_health
+    if args.rpc_url:
+        results = [check_endpoint_health(args.rpc_url, "custom")]
+    else:
+        results = check_all_networks()
+        
+    if args.json:
+        print(json.dumps(results, indent=2))
+        return
+        
+    print(f"\n{TEAL}{BOLD}⚡ Stellar & Soroban RPC Health Status{RESET}\n")
+    for r in results:
+        status_color = TEAL if r["status"] == "HEALTHY" else RED
+        print(f"  • {BOLD}{r['network'].upper():<12}{RESET} -> {status_color}{r['status']:<8}{RESET} ({r['latency_ms']}ms)")
+        if r['status'] == 'HEALTHY':
+            print(f"    Ledger: #{r['latest_ledger']} | Protocol: v{r['protocol_version']} | URL: {r['rpc_url']}")
+        else:
+            print(f"    Error: {r.get('error')} | URL: {r['rpc_url']}")
+    print()
 
 def main():
     parser = argparse.ArgumentParser(
@@ -276,6 +343,22 @@ def main():
     p_simulate.add_argument("--export-md", help="Export simulation analysis as Markdown file")
     p_simulate.add_argument("--export-json", help="Export simulation report as JSON file")
     
+    # profile (resource gas flamegraph)
+    p_prof = subparsers.add_parser("profile", help="Profile CPU instructions, WASM memory, and storage footprints with visual gauges")
+    p_prof.add_argument("xdr", help="Base64 encoded transaction envelope XDR")
+
+    # lint (contract static analysis)
+    p_lint = subparsers.add_parser("lint", help="Static analysis scanner for Soroban smart contracts (.rs)")
+    p_lint.add_argument("file", help="Path to Rust smart contract source file")
+
+    # generate-test (rust unit test fixture generator)
+    p_gentest = subparsers.add_parser("generate-test", help="Generate #[test] Rust unit test fixtures for catalog errors")
+    p_gentest.add_argument("error_id", help="Catalog error ID")
+    p_gentest.add_argument("--export-rs", help="Export test code to a Rust file")
+
+    # health (rpc diagnostics)
+    p_health = subparsers.add_parser("health", help="Check latency and health across Stellar & Soroban RPC endpoints")
+
     # auth-check (contract auth tree validator)
     p_auth = subparsers.add_parser("auth-check", help="Simulate and validate contract invocation authorization trees")
     p_auth.add_argument("xdr", help="Base64 encoded transaction envelope XDR to validate")
@@ -304,7 +387,7 @@ def main():
     p_storage.add_argument("--export-json", help="Export storage report as JSON file")
 
     # If first arg is not a known subcommand and doesn't start with '-', default to 'explain'
-    known_cmds = ["explain", "inspect", "batch-inspect", "simulate", "auth-check", "fix", "decode", "watch", "storage", "-h", "--help", "--network", "--rpc-url", "--json"]
+    known_cmds = ["explain", "inspect", "batch-inspect", "simulate", "profile", "lint", "generate-test", "health", "auth-check", "fix", "decode", "watch", "storage", "-h", "--help", "--network", "--rpc-url", "--json"]
     raw_args = sys.argv[1:]
     if raw_args and raw_args[0] not in known_cmds:
         raw_args = ["explain"] + raw_args
@@ -321,6 +404,14 @@ def main():
         handle_batch_inspect(args, client)
     elif args.subcommand == "simulate":
         handle_simulate(args, client)
+    elif args.subcommand == "profile":
+        handle_profile(args, client)
+    elif args.subcommand == "lint":
+        handle_lint(args, client)
+    elif args.subcommand == "generate-test":
+        handle_generate_test(args, client)
+    elif args.subcommand == "health":
+        handle_health(args, client)
     elif args.subcommand == "auth-check":
         handle_auth_check(args, client)
     elif args.subcommand == "fix":
