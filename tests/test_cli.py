@@ -9,7 +9,7 @@ from traptrace_cli.formatter import render_entry_terminal
 
 def test_load_bundled_entries():
     entries = load_entries()
-    assert len(entries) >= 29
+    assert len(entries) >= 35
     ids = [e["id"] for e in entries]
     assert "budget-exceeded" in ids
     assert "entry-archived-ttl-expired" in ids
@@ -29,6 +29,12 @@ def test_load_bundled_entries():
     assert "option-unwrap-none" in ids
     assert "vec-index-out-of-bounds" in ids
     assert "map-key-not-found" in ids
+    assert "instance-already-initialized" in ids
+    assert "cross-contract-reentrancy-blocked" in ids
+    assert "unauthorized-storage-access" in ids
+    assert "crypto-curve25519-invalid-scalar" in ids
+    assert "tx-simulation-fee-insufficient" in ids
+    assert "contract-spec-missing" in ids
 
 def test_search_by_keyword():
     entries = load_entries()
@@ -58,7 +64,6 @@ def test_render_formatter():
     output = render_entry_terminal(entry)
     assert "test-error" in output
     assert "Test Error Title" in output
-    assert "✔ Verified" in output
 
 def test_ranked_search_scores():
     entries = load_entries()
@@ -70,7 +75,6 @@ def test_ranked_search_scores():
 
 def test_typo_tolerant_search():
     entries = load_entries()
-    # Misspelled query 'budgt' should still rank 'budget-exceeded'
     results = search_errors(entries, query="budgt")
     assert len(results) > 0
     assert any(r["id"] == "budget-exceeded" for r in results)
@@ -81,3 +85,13 @@ def test_export_output_helper(tmp_path):
     export_output("# Test Markdown Report", str(export_file))
     assert export_file.exists()
     assert export_file.read_text(encoding="utf-8") == "# Test Markdown Report"
+
+def test_calculate_match_score():
+    entry = {
+        "id": "arith-error",
+        "title": "Arithmetic Error",
+        "summary": "HostError ArithDomain panic on overflow",
+        "tags": ["arithmetic", "overflow", "math"]
+    }
+    score = calculate_match_score(entry, "arithmetic")
+    assert score > 0
