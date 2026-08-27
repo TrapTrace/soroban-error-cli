@@ -207,6 +207,79 @@ pub enum Error {
 pub fn get_balance(env: Env, user: Address) -> Result<i128, Error> {
     env.storage().persistent().get(&user).ok_or(Error::UserNotFound)
 }"""
+    },
+    "instance-already-initialized": {
+        "title": "Idempotent Initialization & Constructor Pattern",
+        "description": "Prevent re-initialization panics by guarding constructor logic with storage state flags.",
+        "bad_code": """// ❌ BUGGY: Calling initialize again overwrites admin without checks
+pub fn initialize(env: Env, admin: Address) {
+    env.storage().instance().set(&symbol_short!("ADMIN"), &admin);
+}""",
+        "fix_code": """// ✅ REMEDIATED: Guard initialization with storage flag or native constructor
+pub fn initialize(env: Env, admin: Address) -> Result<(), Error> {
+    if env.storage().instance().has(&symbol_short!("ADMIN")) {
+        return Err(Error::AlreadyInitialized);
+    }
+    env.storage().instance().set(&symbol_short!("ADMIN"), &admin);
+    Ok(())
+}"""
+    },
+    "cross-contract-reentrancy-blocked": {
+        "title": "Checks-Effects-Interactions Security Pattern",
+        "description": "Update internal state before calling external contract interfaces to eliminate reentrancy traps.",
+        "bad_code": """// ❌ BUGGY: External invocation happens before state balance update
+pub fn withdraw(env: Env, recipient: Address, amount: i128) {
+    token_client.transfer(&env.current_contract_address(), &recipient, &amount);
+    let bal = env.storage().persistent().get(&recipient).unwrap_or(0);
+    env.storage().persistent().set(&recipient, &(bal - amount));
+}""",
+        "fix_code": """// ✅ REMEDIATED: State is updated before external dispatch
+pub fn withdraw(env: Env, recipient: Address, amount: i128) -> Result<(), Error> {
+    recipient.require_auth();
+    let bal = env.storage().persistent().get(&recipient).unwrap_or(0);
+    let new_bal = bal.checked_sub(amount).ok_or(Error::InsufficientBalance)?;
+    env.storage().persistent().set(&recipient, &new_bal);
+    
+    token_client.transfer(&env.current_contract_address(), &recipient, &amount);
+    Ok(())
+}"""
+    },
+    "unauthorized-storage-access": {
+        "title": "Cross-Contract State Isolation & Public Interface",
+        "description": "Access state across contract boundaries via exported client getters.",
+        "bad_code": """// ❌ BUGGY: Accessing foreign storage key directly without interface
+let val = env.storage().instance().get(&foreign_key).unwrap();""",
+        "fix_code": """// ✅ REMEDIATED: Query target contract via generated client getter
+let foreign_client = ForeignContractClient::new(&env, &foreign_contract_address);
+let val = foreign_client.get_state_value();"""
+    },
+    "crypto-curve25519-invalid-scalar": {
+        "title": "Canonical Key Encoding & Subgroup Validation",
+        "description": "Validate public key bytes and verify modulo subgroup range before host crypto calls.",
+        "bad_code": """// ❌ BUGGY: Passing unvalidated raw slice directly to host crypto
+env.crypto().ed25519_verify(&raw_bytes, &msg, &sig);""",
+        "fix_code": """// ✅ REMEDIATED: Ensure 32-byte canonical representation
+let canonical_key: BytesN<32> = raw_bytes.try_into().map_err(|_| Error::InvalidKeyLength)?;
+env.crypto().ed25519_verify(&canonical_key, &msg, &sig);"""
+    },
+    "tx-simulation-fee-insufficient": {
+        "title": "Dynamic Fee Estimation with Surge Buffer",
+        "description": "Estimate inclusion fees dynamically and add safety buffer against network congestion.",
+        "bad_code": """// ❌ BUGGY: Hardcoded static base fee
+const fee = 100;""",
+        "fix_code": """// ✅ REMEDIATED: Dynamic fee with 20% surge pricing buffer
+const feeStats = await rpc.getFeeStats();
+const baseFee = feeStats.fee_charged.mode || 100;
+const inclusionFee = Math.ceil(baseFee * 1.20);"""
+    },
+    "contract-spec-missing": {
+        "title": "Preserve Soroban Custom Metadata Sections",
+        "description": "Build with stellar CLI and retain .soroban_spec section during optimization.",
+        "bad_code": """# ❌ BUGGY: Strips custom metadata section required by SDKs
+wasm-opt -Oz --strip-all target.wasm -o stripped.wasm""",
+        "fix_code": """# ✅ REMEDIATED: Strip debug symbols only or use stellar build
+stellar contract build
+# or: wasm-opt -Oz --strip-debug target.wasm -o optimized.wasm"""
     }
 }
 
