@@ -93,8 +93,10 @@ def test_test_generator_output():
     assert "custom_contract_error" in test_fallback["code"]
 
 def test_health_checker_mock():
-    mock_ledger_res = {"result": {"sequence": 4257911}}
-    mock_net_res = {"result": {"protocolVersion": 21, "passphrase": "Test SDF Network ; September 2015"}}
+    # Mocks match SorobanRpcClient._call(): the JSON-RPC "result" object is
+    # returned directly (not wrapped in a "result" envelope).
+    mock_ledger_res = {"sequence": 4257911}
+    mock_net_res = {"protocolVersion": 21, "passphrase": "Test SDF Network ; September 2015"}
 
     with patch("traptrace_cli.rpc_client.SorobanRpcClient.get_latest_ledger", return_value=mock_ledger_res):
         with patch("traptrace_cli.rpc_client.SorobanRpcClient.get_network", return_value=mock_net_res):

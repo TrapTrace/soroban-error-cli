@@ -228,6 +228,8 @@ def handle_fix(args, client: Optional[SorobanRpcClient] = None):
         print(json.dumps(fix_data, indent=2))
         return
         
+    print(render_fix_terminal(args.error_id, fix_data))
+        
 def handle_lint(args, client: Optional[SorobanRpcClient] = None):
     from traptrace_cli.linter import lint_file
     result = lint_file(args.file)
@@ -302,19 +304,21 @@ def handle_health(args, client: Optional[SorobanRpcClient] = None):
     print()
 
 def main():
+    common_parser = argparse.ArgumentParser(add_help=False)
+    common_parser.add_argument("--network", choices=["testnet", "mainnet", "futurenet", "local", "standalone"], default="testnet", help="Stellar network (default: testnet)")
+    common_parser.add_argument("--rpc-url", help="Custom Soroban JSON-RPC endpoint URL")
+    common_parser.add_argument("--json", action="store_true", help="Output machine-readable JSON")
+
     parser = argparse.ArgumentParser(
         prog="traptrace",
-        description="TrapTrace: Operational diagnostic engine, transaction inspector, and error resolver for Stellar Soroban."
+        description="TrapTrace: Operational diagnostic engine, transaction inspector, and error resolver for Stellar Soroban.",
+        parents=[common_parser]
     )
-    
-    parser.add_argument("--network", choices=["testnet", "mainnet", "futurenet", "local", "standalone"], default="testnet", help="Stellar network (default: testnet)")
-    parser.add_argument("--rpc-url", help="Custom Soroban JSON-RPC endpoint URL")
-    parser.add_argument("--json", action="store_true", help="Output machine-readable JSON")
     
     subparsers = parser.add_subparsers(dest="subcommand", help="Operational Subcommands")
     
     # explain (error lookup)
-    p_explain = subparsers.add_parser("explain", help="Search error codes, keywords, and stack traces in the catalog")
+    p_explain = subparsers.add_parser("explain", help="Search error codes, keywords, and stack traces in the catalog", parents=[common_parser])
     p_explain.add_argument("query", nargs="?", default="", help="Error string, code, or keyword")
     p_explain.add_argument("-c", "--category", choices=["host-error", "cli-error", "rpc-error", "sdk-error"], help="Filter by category")
     p_explain.add_argument("-v", "--verified", action="store_true", help="Show verified entries only")
@@ -323,13 +327,13 @@ def main():
     p_explain.add_argument("--index-path", help="Path to local soroban-error-index directory")
     
     # inspect (tx hash)
-    p_inspect = subparsers.add_parser("inspect", help="Inspect an on-chain transaction by hash and diagnose failure traces")
+    p_inspect = subparsers.add_parser("inspect", help="Inspect an on-chain transaction by hash and diagnose failure traces", parents=[common_parser])
     p_inspect.add_argument("tx_hash", help="Transaction hash (hex string)")
     p_inspect.add_argument("--export-md", help="Export inspection diagnosis as Markdown file")
     p_inspect.add_argument("--export-json", help="Export inspection report as JSON file")
     
     # batch-inspect (multi-tx diagnostics)
-    p_batch = subparsers.add_parser("batch-inspect", help="Run multi-transaction diagnostics from a JSON dataset or hash list")
+    p_batch = subparsers.add_parser("batch-inspect", help="Run multi-transaction diagnostics from a JSON dataset or hash list", parents=[common_parser])
     p_batch.add_argument("hashes", nargs="*", help="Transaction hashes to inspect")
     p_batch.add_argument("-f", "--file", help="Path to JSON file containing list of transaction hashes")
     p_batch.add_argument("--limit", type=int, help="Maximum number of transactions to inspect")
@@ -337,50 +341,50 @@ def main():
     p_batch.add_argument("--export-json", help="Export batch diagnostic report as JSON file")
     
     # simulate (xdr pre-flight)
-    p_simulate = subparsers.add_parser("simulate", help="Run pre-flight simulation for transaction envelope XDR")
+    p_simulate = subparsers.add_parser("simulate", help="Run pre-flight simulation for transaction envelope XDR", parents=[common_parser])
     p_simulate.add_argument("xdr", help="Base64 encoded transaction envelope XDR")
     p_simulate.add_argument("--leeway", type=int, help="Optional CPU instruction leeway")
     p_simulate.add_argument("--export-md", help="Export simulation analysis as Markdown file")
     p_simulate.add_argument("--export-json", help="Export simulation report as JSON file")
     
     # profile (resource gas flamegraph)
-    p_prof = subparsers.add_parser("profile", help="Profile CPU instructions, WASM memory, and storage footprints with visual gauges")
+    p_prof = subparsers.add_parser("profile", help="Profile CPU instructions, WASM memory, and storage footprints with visual gauges", parents=[common_parser])
     p_prof.add_argument("xdr", help="Base64 encoded transaction envelope XDR")
 
     # lint (contract static analysis)
-    p_lint = subparsers.add_parser("lint", help="Static analysis scanner for Soroban smart contracts (.rs)")
+    p_lint = subparsers.add_parser("lint", help="Static analysis scanner for Soroban smart contracts (.rs)", parents=[common_parser])
     p_lint.add_argument("file", help="Path to Rust smart contract source file")
 
     # generate-test (rust unit test fixture generator)
-    p_gentest = subparsers.add_parser("generate-test", help="Generate #[test] Rust unit test fixtures for catalog errors")
+    p_gentest = subparsers.add_parser("generate-test", help="Generate #[test] Rust unit test fixtures for catalog errors", parents=[common_parser])
     p_gentest.add_argument("error_id", help="Catalog error ID")
     p_gentest.add_argument("--export-rs", help="Export test code to a Rust file")
 
     # health (rpc diagnostics)
-    p_health = subparsers.add_parser("health", help="Check latency and health across Stellar & Soroban RPC endpoints")
+    p_health = subparsers.add_parser("health", help="Check latency and health across Stellar & Soroban RPC endpoints", parents=[common_parser])
 
     # auth-check (contract auth tree validator)
-    p_auth = subparsers.add_parser("auth-check", help="Simulate and validate contract invocation authorization trees")
+    p_auth = subparsers.add_parser("auth-check", help="Simulate and validate contract invocation authorization trees", parents=[common_parser])
     p_auth.add_argument("xdr", help="Base64 encoded transaction envelope XDR to validate")
     p_auth.add_argument("--export-json", help="Export authorization tree diagnosis as JSON file")
     
     # fix (auto-fix snippet generator)
-    p_fix = subparsers.add_parser("fix", help="Generate idiomatic Rust/Soroban remediation code snippets for catalog errors")
+    p_fix = subparsers.add_parser("fix", help="Generate idiomatic Rust/Soroban remediation code snippets for catalog errors", parents=[common_parser])
     p_fix.add_argument("error_id", help="Error catalog ID (e.g. arith-error, require-auth-missing)")
     p_fix.add_argument("--export-rs", help="Export remediation code snippet directly to a Rust file (.rs)")
     
     # decode (xdr decoder)
-    p_decode = subparsers.add_parser("decode", help="Decode base64 Soroban DiagnosticEvent XDR")
+    p_decode = subparsers.add_parser("decode", help="Decode base64 Soroban DiagnosticEvent XDR", parents=[common_parser])
     p_decode.add_argument("xdr", help="Base64 encoded DiagnosticEvent XDR string")
     
     # watch (live contract stream)
-    p_watch = subparsers.add_parser("watch", help="Stream and monitor live contract events and traps")
+    p_watch = subparsers.add_parser("watch", help="Stream and monitor live contract events and traps", parents=[common_parser])
     p_watch.add_argument("-c", "--contract", help="Contract ID to filter events")
     p_watch.add_argument("--interval", type=float, default=3.0, help="Polling interval in seconds")
     p_watch.add_argument("--count", type=int, default=None, help="Maximum number of polling iterations")
     
     # storage (state & TTL audit)
-    p_storage = subparsers.add_parser("storage", help="Audit contract storage keys and TTL expiration health")
+    p_storage = subparsers.add_parser("storage", help="Audit contract storage keys and TTL expiration health", parents=[common_parser])
     p_storage.add_argument("-c", "--contract", required=True, help="Contract ID")
     p_storage.add_argument("-k", "--keys", nargs="*", help="Storage key XDR strings to inspect")
     p_storage.add_argument("--export-md", help="Export storage report as Markdown file")

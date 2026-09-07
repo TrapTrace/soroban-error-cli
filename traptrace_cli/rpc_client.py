@@ -11,7 +11,7 @@ from typing import Dict, Any, Optional, List, Union
 
 DEFAULT_NETWORKS = {
     "testnet": "https://soroban-testnet.stellar.org",
-    "mainnet": "https://mainnet.stellar.org:443",
+    "mainnet": "https://mainnet.sorobanrpc.com",
     "futurenet": "https://rpc-futurenet.stellar.org",
     "local": "http://localhost:8000/soroban/rpc",
     "standalone": "http://localhost:8000/soroban/rpc"

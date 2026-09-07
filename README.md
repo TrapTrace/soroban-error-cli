@@ -108,7 +108,7 @@ traptrace explain "HostError::BudgetExceeded" --rank --detailed
 | Network | Flag | Default RPC URL |
 |---|---|---|
 | **Testnet** | `--network testnet` | `https://soroban-testnet.stellar.org` |
-| **Mainnet** | `--network mainnet` | `https://mainnet.stellar.org:443` |
+| **Mainnet** | `--network mainnet` | `https://mainnet.sorobanrpc.com` |
 | **Futurenet** | `--network futurenet` | `https://rpc-futurenet.stellar.org` |
 | **Local Standalone** | `--network local` | `http://localhost:8000/soroban/rpc` |
 | **Custom RPC** | `--rpc-url <URL>` | Any custom JSON-RPC 2.0 endpoint |
