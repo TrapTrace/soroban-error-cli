@@ -9,7 +9,7 @@ BUNDLED_ENTRIES = [
     "title": "CLI Error - Identity Account Not Found on Network",
     "category": "cli-error",
     "error_code": "CLI::AccountNotFound",
-    "verified": True,
+    "verified": False,
     "summary": "Soroban CLI configured source identity account is not funded or does not exist on the target network.",
     "tags": [
       "account",
@@ -32,7 +32,7 @@ BUNDLED_ENTRIES = [
     "title": "CLI Error - WASM Contract Specification (ABI) Metadata Missing or Stripped",
     "category": "cli-error",
     "error_code": "CLI::ContractSpecMissing",
-    "verified": True,
+    "verified": False,
     "summary": "Contract WASM file deployed without embedded contract specification custom sections, preventing automated ABI decoding, binding generation, and CLI inspection.",
     "tags": [
       "cli-error",
@@ -58,7 +58,7 @@ BUNDLED_ENTRIES = [
     "title": "CLI Error - Network Passphrase or Chain ID Mismatch",
     "category": "cli-error",
     "error_code": "CLI::InvalidChainId",
-    "verified": True,
+    "verified": False,
     "summary": "Transaction simulation or submission rejected because the transaction network passphrase hash does not match the target Stellar node network ID.",
     "tags": [
       "network",
@@ -86,7 +86,7 @@ BUNDLED_ENTRIES = [
     "title": "CLI Error - Transaction Failed Bad Sequence Number",
     "category": "cli-error",
     "error_code": "txBAD_SEQ",
-    "verified": True,
+    "verified": False,
     "summary": "Transaction submission rejected because account sequence number did not match network sequence counter.",
     "tags": [
       "sequence",
@@ -109,7 +109,7 @@ BUNDLED_ENTRIES = [
     "title": "CLI Error - Contract WASM Module Bytecode Verification Failed",
     "category": "cli-error",
     "error_code": "CLI::WasmVerificationFailed",
-    "verified": True,
+    "verified": False,
     "summary": "Contract upload or installation failed because the compiled WASM binary violates Soroban VM constraints, contains unsupported floating-point operations, or imports unexported host interfaces.",
     "tags": [
       "wasm",
@@ -137,7 +137,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Integer Arithmetic Overflow, Underflow, or Division by Zero",
     "category": "host-error",
     "error_code": "HostError::ArithDomain",
-    "verified": True,
+    "verified": False,
     "summary": "Contract execution panicked due to an arithmetic domain error such as integer overflow, underflow, or division by zero in WASM.",
     "tags": [
       "arithmetic",
@@ -164,7 +164,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Contract Authorization Invalid Signature",
     "category": "host-error",
     "error_code": "HostError::AuthInvalidSignature",
-    "verified": True,
+    "verified": False,
     "summary": "Transaction execution or simulation aborted because an authorization entry signature failed cryptographic verification against the required signer address or public key.",
     "tags": [
       "auth",
@@ -192,7 +192,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - CPU or Memory Execution Budget Exceeded",
     "category": "host-error",
     "error_code": "HostError::BudgetExceeded",
-    "verified": True,
+    "verified": False,
     "summary": "Contract execution terminated because CPU instruction count or memory allocation exceeded specified envelope limits.",
     "tags": [
       "budget",
@@ -217,7 +217,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Contract Data Size Exceeds Ledger Entry Limit",
     "category": "host-error",
     "error_code": "HostError::StorageValueExceedsLimit",
-    "verified": True,
+    "verified": False,
     "summary": "Contract execution terminated because an attempted storage write or data structure serialization exceeded the maximum protocol ledger entry byte limit (64KB).",
     "tags": [
       "storage",
@@ -244,7 +244,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Contract Code or Instance Not Found",
     "category": "host-error",
     "error_code": "HostError::ContractNotFound",
-    "verified": True,
+    "verified": False,
     "summary": "Host environment failed to locate WASM executable bytecode or instance storage for given contract ID.",
     "tags": [
       "contract-id",
@@ -270,7 +270,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Cross-Contract Re-entrancy Blocked",
     "category": "host-error",
     "error_code": "HostError::ReentrancyBlocked",
-    "verified": True,
+    "verified": False,
     "summary": "Soroban host VM detected mutual recursive invocation cycle across contract call frames without explicit reentrancy permissions.",
     "tags": [
       "host-error",
@@ -296,7 +296,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Curve25519 / Ed25519 Invalid Scalar or Point",
     "category": "host-error",
     "error_code": "HostError::CryptoScalarInvalid",
-    "verified": True,
+    "verified": False,
     "summary": "Host cryptographic verification failed due to non-canonical point encoding, invalid scalar length, or scalar out of subgroup range.",
     "tags": [
       "host-error",
@@ -322,7 +322,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Cryptographic Signature or Curve Verification Failed",
     "category": "host-error",
     "error_code": "HostError::CryptoError",
-    "verified": True,
+    "verified": False,
     "summary": "Smart contract execution panicked during host cryptographic primitives verification (such as env.crypto().ed25519_verify) due to an invalid signature, corrupted public key, or payload mismatch.",
     "tags": [
       "crypto",
@@ -350,7 +350,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Storage Entry Archived or TTL Expired",
     "category": "host-error",
     "error_code": "HostError::EntryArchived",
-    "verified": True,
+    "verified": False,
     "summary": "Attempted access to a persistent or instance storage entry whose Time-To-Live (TTL) has expired and been archived.",
     "tags": [
       "storage",
@@ -373,7 +373,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Invalid Action or Host Invariant Violation",
     "category": "host-error",
     "error_code": "HostError::InvalidAction",
-    "verified": True,
+    "verified": False,
     "summary": "Contract execution failed because a host function was called with invalid domain arguments or violated host state invariants.",
     "tags": [
       "host-error",
@@ -399,7 +399,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Smart Contract Instance Already Initialized",
     "category": "host-error",
     "error_code": "HostError::ContractAlreadyInitialized",
-    "verified": True,
+    "verified": False,
     "summary": "Attempting to invoke contract initialization logic on an already initialized contract instance.",
     "tags": [
       "host-error",
@@ -425,7 +425,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Contract Instance and Executable Storage Archived",
     "category": "host-error",
     "error_code": "HostError::InstanceStorageExpired",
-    "verified": True,
+    "verified": False,
     "summary": "Contract invocation failed because the contract instance or executable WASM bytecode exceeded its maximum live TTL and was archived by the network.",
     "tags": [
       "storage",
@@ -452,7 +452,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Invalid ScVal Tag Discriminator (Malformed Val Handle)",
     "category": "host-error",
     "error_code": "HostError::InvalidScValTag",
-    "verified": True,
+    "verified": False,
     "summary": "Host environment rejected a value representation because the 64-bit tagged Val or ScVal discriminator byte is corrupted, unrecognized, or invalid.",
     "tags": [
       "host-error",
@@ -479,7 +479,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Soroban SDK Map Key Lookup Miss Panic",
     "category": "host-error",
     "error_code": "HostError::MapKeyNotFound",
-    "verified": True,
+    "verified": False,
     "summary": "Contract execution panicked because a key lookup on a Soroban SDK Map failed to find the key and was followed by an explicit unwrap.",
     "tags": [
       "host-error",
@@ -507,7 +507,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Rust Option::unwrap() Called on None in Contract Code",
     "category": "host-error",
     "error_code": "HostError::OptionUnwrapNone",
-    "verified": True,
+    "verified": False,
     "summary": "Contract execution panicked because Option::unwrap() or Result::unwrap() was invoked on a None or Err value inside the smart contract WASM bytecode.",
     "tags": [
       "host-error",
@@ -535,7 +535,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Missing Required Invocation Authorization",
     "category": "host-error",
     "error_code": "HostError::AuthMissing",
-    "verified": True,
+    "verified": False,
     "summary": "Contract execution halted because an operation required explicit authorization from an Address that was not provided in the invocation auth tree.",
     "tags": [
       "auth",
@@ -562,7 +562,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Ledger Storage Key Size Exceeds Network Cap",
     "category": "host-error",
     "error_code": "HostError::StorageKeySizeLimit",
-    "verified": True,
+    "verified": False,
     "summary": "Contract attempted to persist a storage entry whose key exceeds Soroban's maximum ledger key size limit (typically 64KB or protocol cap).",
     "tags": [
       "storage",
@@ -588,7 +588,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Storage Ledger Entry Not Found or Missing Value",
     "category": "host-error",
     "error_code": "HostError::StorageNotFound",
-    "verified": True,
+    "verified": False,
     "summary": "Contract attempted to read a non-existent or uninitialized key from instance, persistent, or temporary storage without fallback handling.",
     "tags": [
       "storage",
@@ -616,7 +616,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Cross-Contract Sub-Invocation Failed",
     "category": "host-error",
     "error_code": "HostError::ContextFailed",
-    "verified": True,
+    "verified": False,
     "summary": "Cross-contract call to child contract returned an unhandled error or panic.",
     "tags": [
       "cross-contract",
@@ -639,7 +639,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - User-Defined Contract Error in Cross-Contract Sub-Invocation",
     "category": "host-error",
     "error_code": "HostError::ContractUserError",
-    "verified": True,
+    "verified": False,
     "summary": "Cross-contract execution reverted because the callee contract returned an explicit user-defined contract error enum discriminant.",
     "tags": [
       "cross-contract",
@@ -666,7 +666,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Temporary Ledger Storage Entry Expired (TTL Evicted)",
     "category": "host-error",
     "error_code": "HostError::TemporaryStorageExpired",
-    "verified": True,
+    "verified": False,
     "summary": "Contract attempted to read or write a temporary storage key whose time-to-live (TTL) passed without being bumped, resulting in permanent eviction.",
     "tags": [
       "storage",
@@ -693,7 +693,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Unauthorized Contract Storage Footprint Access",
     "category": "host-error",
     "error_code": "HostError::StorageAccessUnauthorized",
-    "verified": True,
+    "verified": False,
     "summary": "Contract execution attempted to access storage ledger keys outside its allocated ledger footprint or across contract security boundaries.",
     "tags": [
       "host-error",
@@ -719,7 +719,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - WASM Unreachable Code Reached (Panic)",
     "category": "host-error",
     "error_code": "HostError::WasmUnreachable",
-    "verified": True,
+    "verified": False,
     "summary": "WASM virtual machine hit an explicit panic instruction or out-of-bounds index execution.",
     "tags": [
       "wasm",
@@ -742,7 +742,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - Soroban SDK Vec Index Out of Bounds Panic",
     "category": "host-error",
     "error_code": "HostError::VecIndexOutOfBounds",
-    "verified": True,
+    "verified": False,
     "summary": "Contract execution panicked because an indexing operation on a Soroban SDK Vec accessed an index greater than or equal to the vector length.",
     "tags": [
       "host-error",
@@ -770,7 +770,7 @@ BUNDLED_ENTRIES = [
     "title": "Host Error - WASM VM Memory Page Allocation Exhausted",
     "category": "host-error",
     "error_code": "HostError::MemoryExhausted",
-    "verified": True,
+    "verified": False,
     "summary": "Contract execution halted because total WASM linear memory pages allocated at runtime exceeded the Soroban VM memory cap.",
     "tags": [
       "wasm",
@@ -797,7 +797,7 @@ BUNDLED_ENTRIES = [
     "title": "RPC Error - Simulate Transaction Authorization Verification Failed",
     "category": "rpc-error",
     "error_code": "RPC::SimulateAuthFailed",
-    "verified": True,
+    "verified": False,
     "summary": "Simulation node failed to verify invocation authorization payload or signature footprint.",
     "tags": [
       "rpc",
@@ -820,7 +820,7 @@ BUNDLED_ENTRIES = [
     "title": "RPC Error - Requested Ledger Storage Key Missing",
     "category": "rpc-error",
     "error_code": "RPC::StorageKeyNotFound",
-    "verified": True,
+    "verified": False,
     "summary": "RPC getLedgerEntries endpoint returned empty result for requested XDR storage key.",
     "tags": [
       "rpc",
@@ -843,7 +843,7 @@ BUNDLED_ENTRIES = [
     "title": "RPC Error - Insufficient Inclusion / Resource Fee for Transaction Submission",
     "category": "rpc-error",
     "error_code": "RPC::InsufficientInclusionFee",
-    "verified": True,
+    "verified": False,
     "summary": "Transaction envelope rejected by RPC node or Horizon because the specified base inclusion fee or resource fee is below current ledger surge requirements.",
     "tags": [
       "rpc-error",
@@ -869,7 +869,7 @@ BUNDLED_ENTRIES = [
     "title": "SDK Error - ScVal to Native Rust Type Conversion Failed",
     "category": "sdk-error",
     "error_code": "SDK::ScValConversionFailed",
-    "verified": True,
+    "verified": False,
     "summary": "Soroban SDK or client library failed to convert a serialized ScVal or Val handle into the expected native Rust type (e.g. integer width mismatch or invalid symbol).",
     "tags": [
       "sdk",
@@ -896,7 +896,7 @@ BUNDLED_ENTRIES = [
     "title": "SDK Error - ScVal to Native JavaScript/Rust Value Conversion Failed",
     "category": "sdk-error",
     "error_code": "SDK::ScValConversionError",
-    "verified": True,
+    "verified": False,
     "summary": "Soroban SDK failed to deserialize raw XDR ScVal into target programming language primitive or struct.",
     "tags": [
       "sdk",

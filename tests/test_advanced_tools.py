@@ -140,64 +140,43 @@ def test_batch_inspector_file_load(tmp_path):
 def test_auth_checker_success():
     client = SorobanRpcClient("testnet")
     checker = AuthChecker(rpc_client=client)
+    # Exercise the real simulator -> checker boundary, not an invented report shape.
+    response = {"results": [{"auth": ["opaque-entry-xdr"]}], "events": [],
+                "latestLedger": 123, "minResourceFee": "100"}
+    with patch.object(client, "simulate_transaction", return_value=response):
+        report = checker.check_xdr("AAAA")
+    assert report["simulation_success"] is True
+    assert report["is_valid"] is False
+    assert report["signatures_verified"] is False
+    assert report["status"] == "REVIEW_REQUIRED"
+    assert report["auth_entries_count"] == 1
+    assert report["auth_trees"][0]["raw"] == "opaque-entry-xdr"
+    assert "SIGNATURES UNVERIFIED" in render_auth_report_terminal(report)
 
-    mock_sim_valid = {
-        "is_valid": True,
-        "simulated_result": {
-            "result": {
-                "auth": [
-                    {
-                        "credentials": {
-                            "type": "AddressCredentials",
-                            "address": "GBYXYZ123",
-                            "nonce": 1
-                        },
-                        "root_invocation": {
-                            "function": "transfer",
-                            "contract_id": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
-                            "sub_invocations": []
-                        }
-                    }
-                ]
-            }
-        },
-        "diagnostic_events": []
-    }
-
-    with patch.object(checker.simulator, "simulate", return_value=mock_sim_valid):
-        report = checker.check_xdr("AAAAAgAAAAB6QZ5cAAAAAA==")
-        assert report["is_valid"] is True
-        assert report["status"] == "PASS"
-        assert report["auth_entries_count"] == 1
-        assert report["auth_trees"][0]["address"] == "GBYXYZ123"
-
-        term_out = render_auth_report_terminal(report)
-        assert "Contract Authorization Tree Validator" in term_out
-        assert "GBYXYZ123" in term_out
 
 def test_auth_checker_trap_detection():
     client = SorobanRpcClient("testnet")
     checker = AuthChecker(rpc_client=client)
 
     mock_sim_invalid = {
-        "is_valid": False,
-        "simulated_result": {
-            "error": "HostError: Error(Auth, InvalidAction)"
-        },
-        "diagnostic_events": [
+        "success": False,
+        "raw_simulation": {
+            "error": "HostError: Error(Auth, InvalidAction)",
+            "events": [
             {
                 "contract_id": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
                 "topics": ["error", "auth"],
                 "data": "missing required authorization for address GABC"
             }
-        ]
+            ]
+        }
     }
 
     with patch.object(checker.simulator, "simulate", return_value=mock_sim_invalid):
         report = checker.check_xdr("AAAAAgAAAAB6QZ5cAAAAAA==")
         assert report["is_valid"] is False
         assert report["status"] == "FAIL"
-        assert len(report["detected_issues"]) == 1
+        assert len(report["detected_issues"]) == 2
         assert "missing required authorization" in report["detected_issues"][0]["details"]
 
         term_out = render_auth_report_terminal(report)
@@ -233,3 +212,17 @@ def test_fix_generator_unknown():
     generator = FixGenerator()
     fix = generator.get_fix("nonexistent-error-12345")
     assert fix is None
+
+
+def test_auth_checker_rpc_failure_and_unrelated_trap_never_pass():
+    from traptrace_cli.rpc_client import SorobanRpcError
+    checker = AuthChecker(SorobanRpcClient("testnet"))
+    with patch.object(checker.client, "simulate_transaction", side_effect=SorobanRpcError("offline")):
+        report = checker.check_xdr("AAAA")
+    assert report["status"] == "FAIL"
+    assert report["simulation_error"] == "offline"
+    with patch.object(checker.client, "simulate_transaction", return_value={"error": "budget exhausted"}):
+        report = checker.check_xdr("AAAA")
+    assert report["status"] == "FAIL"
+    assert report["simulation_success"] is False
+    assert report["signatures_verified"] is False
