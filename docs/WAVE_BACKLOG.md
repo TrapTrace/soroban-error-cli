@@ -151,3 +151,12 @@ medium; planning only. Actual Wave complexity and enrollment are set by maintain
 ## Contribution
 
 Open a focused feat/fix/test/docs branch. PRs explain behavior and actual validation and include Closes #<issue_id>. Follow CONTRIBUTING.md and SECURITY.md.
+
+## Published contributor issues
+
+- [Decode raw RPC authorization entries into actual trees](https://github.com/TrapTrace/soroban-error-cli/issues/7) — proposed medium.
+- [Add simulation response-shape validation](https://github.com/TrapTrace/soroban-error-cli/issues/8) — proposed medium.
+- [Capture a valid missing-authorization execution fixture](https://github.com/TrapTrace/soroban-error-cli/issues/9) — proposed high.
+- [Bound XDR and diagnostic output sizes](https://github.com/TrapTrace/soroban-error-cli/issues/10) — proposed medium.
+- [Document simulation versus signature verification](https://github.com/TrapTrace/soroban-error-cli/issues/11) — proposed trivial.
+- [Add a package installation smoke check to CI](https://github.com/TrapTrace/soroban-error-cli/issues/12) — proposed medium.
