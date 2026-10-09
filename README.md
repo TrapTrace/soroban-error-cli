@@ -29,7 +29,7 @@ Both `traptrace` and `soroban-explain` CLI binaries are available globally.
 ## 🛠️ Operational Commands & Developer Workflows
 
 ### 1. Live On-Chain Transaction Inspector (`traptrace inspect`)
-Connects directly to Stellar RPC (Testnet, Mainnet, Futurenet, or local node) to fetch transactions, decode meta XDR, parse `DiagnosticEvents`, and pinpoint exact host traps with verified fixes.
+Connects directly to Stellar RPC (Testnet, Mainnet, Futurenet, or local node) to fetch transactions, decode meta XDR, parse `DiagnosticEvents`, and pinpoint exact host traps with suggested fixes.
 
 ```bash
 # Inspect a failed transaction on Testnet
@@ -55,7 +55,7 @@ traptrace simulate "AAAAAgAAAA..." --network testnet
 ```
 
 ### 4. Contract Authorization Tree Validator (`traptrace auth-check`)
-Simulates envelope XDR and validates Soroban authorization hierarchies (`AddressCredentials`, `require_auth`, `require_auth_for_args`), surfacing missing signatures or unauthorized sub-invocation trees.
+Simulates envelope XDR and reports returned authorization footprints and auth diagnostics. Successful simulation is `REVIEW_REQUIRED`; it does not verify signatures or establish transaction acceptance. Raw authorization-entry XDR is preserved when structural decoding is unavailable.
 
 ```bash
 traptrace auth-check "AAAAAgAAAA..." --network testnet
@@ -95,7 +95,7 @@ traptrace decode "AAAAAgAAAA..."
 ```
 
 ### 9. Error Catalog Explainer (`traptrace explain`)
-Performs tokenized fuzzy lookup across the 21 testnet-verified Soroban error catalog entries with ranked scoring.
+Performs tokenized fuzzy lookup across the 35 cataloged Soroban error entries with ranked scoring.
 
 ```bash
 traptrace explain "HostError::BudgetExceeded" --rank --detailed
@@ -128,3 +128,7 @@ All 31 unit, mock integration, and operational tests pass with zero external dep
 ## 📄 License
 
 MIT License. Copyright (c) 2026 TrapTrace.
+
+## Submission evidence
+
+See [the submission brief](docs/SUBMISSION.md). Catalog verification flags are cleared pending error-specific execution evidence. Source linting and suggested fixes require developer review.

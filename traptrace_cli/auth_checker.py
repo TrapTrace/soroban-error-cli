@@ -1,7 +1,7 @@
 """
 Contract Authorization Tree Validator for TrapTrace CLI.
-Inspects and visualizes Soroban authorization hierarchies, validates signature credentials,
-and flags missing authorizations or misconfigured sub-invocation trees.
+Reports the authorization footprint and errors returned by simulation.
+Simulation does not verify signatures or prove transaction acceptance.
 """
 
 import json
@@ -10,6 +10,7 @@ from typing import Dict, Any, List, Optional
 
 from traptrace_cli.rpc_client import SorobanRpcClient
 from traptrace_cli.simulator import TransactionSimulator
+from traptrace_cli.xdr_decoder import parse_diagnostic_events_list
 from traptrace_cli.tui import (
     BOLD, RESET, DIM, TEAL, CYAN, RED, GREEN, YELLOW, WHITE,
     render_box
@@ -26,9 +27,12 @@ class AuthChecker:
         """Simulate envelope XDR and analyze returned authorization footprint and errors."""
         sim_report = self.simulator.simulate(xdr_str)
         
-        auth_entries = sim_report.get("simulated_result", {}).get("result", {}).get("auth", [])
-        events = sim_report.get("diagnostic_events", [])
-        has_error = not sim_report.get("is_valid", False)
+        raw = sim_report.get("raw_simulation", {})
+        auth_entries = [entry for result in raw.get("results", [])
+                        for entry in result.get("auth", [])]
+        events = parse_diagnostic_events_list(raw.get("events", []))
+        has_error = sim_report.get("success") is not True
+        simulation_error = raw.get("error") or sim_report.get("error") or sim_report.get("error_message")
         
         # Analyze auth issues
         auth_issues = []
@@ -52,15 +56,20 @@ class AuthChecker:
             parsed_tree = self._parse_auth_entry(entry, idx)
             auth_trees.append(parsed_tree)
 
-        status = "FAIL" if (has_error and auth_issues) else ("PASS" if not has_error else "WARN")
+        if simulation_error and any(word in str(simulation_error).lower()
+                                    for word in ("auth", "signature", "unauthorized")):
+            auth_issues.append({"type": "AuthSimulationError", "details": str(simulation_error)})
+        status = "FAIL" if has_error or auth_issues else "REVIEW_REQUIRED"
 
         return {
-            "is_valid": len(auth_issues) == 0 and not has_error,
+            "is_valid": False,
+            "simulation_success": not has_error,
+            "signatures_verified": False,
             "status": status,
             "auth_entries_count": len(auth_entries),
             "auth_trees": auth_trees,
             "detected_issues": auth_issues,
-            "simulation_error": sim_report.get("simulated_result", {}).get("error"),
+            "simulation_error": simulation_error,
             "network": self.client.network_name
         }
 
@@ -71,11 +80,11 @@ class AuthChecker:
             root_invocation = entry.get("root_invocation", {})
             return {
                 "index": index,
-                "credentials_type": credentials.get("type", "AddressCredentials"),
-                "address": credentials.get("address", "G..."),
+                "credentials_type": credentials.get("type"),
+                "address": credentials.get("address"),
                 "nonce": credentials.get("nonce", 0),
                 "signature_expiration_ledger": credentials.get("signature_expiration_ledger"),
-                "function": root_invocation.get("function", "invoke"),
+                "function": root_invocation.get("function"),
                 "contract_id": root_invocation.get("contract_id", ""),
                 "sub_invocations": root_invocation.get("sub_invocations", [])
             }
@@ -86,8 +95,9 @@ class AuthChecker:
 
 def render_auth_report_terminal(report: Dict[str, Any]) -> str:
     """Render terminal colored authorization tree and issue diagnosis."""
-    is_valid = report.get("is_valid", False)
-    status_tag = f"{GREEN}{BOLD}[VALID AUTH]{RESET}" if is_valid else f"{RED}{BOLD}[AUTH ERROR / TRAP]{RESET}"
+    status_tag = (f"{YELLOW}{BOLD}[SIMULATED / SIGNATURES UNVERIFIED]{RESET}"
+                  if report.get("status") == "REVIEW_REQUIRED"
+                  else f"{RED}{BOLD}[SIMULATION FAILED]{RESET}")
     
     lines = [
         f"\n{TEAL}{BOLD}⚡ TrapTrace Contract Authorization Tree Validator{RESET}\n",
@@ -121,6 +131,6 @@ def render_auth_report_terminal(report: Dict[str, Any]) -> str:
                 lines.append(f"  │      └── (No sub-contract delegations)")
         lines.append("")
     elif not issues:
-        lines.append(f"  {DIM}(No explicit custom authorization footprint required for this operation){RESET}\n")
+        lines.append(f"  {DIM}(No authorization footprint returned; signature validity is unverified){RESET}\n")
 
     return "\n".join(lines)

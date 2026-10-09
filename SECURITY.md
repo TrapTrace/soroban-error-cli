@@ -1,13 +1,5 @@
-# Security Policy
+# Security
 
-## Supported Versions
+Report reproducible vulnerabilities through GitHub private security advisories when available. Otherwise ask a maintainer for a private reporting channel without publishing exploit details. No dedicated security email address, audit or response-time guarantee is established.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 0.1.x   | :white_check_mark: |
-
-## Reporting a Vulnerability
-
-If you discover a security vulnerability in `traptrace-cli`, please report it responsibly via GitHub Security Advisories on this repository.
-
-We will review and respond within 48 hours.
+Keep signing keys, wallet credentials, tokens, environment files and private records out of commits and logs. Live demos use synthetic Testnet data and disposable keys. Simulation, structural XDR decoding and explorer records are evidence with distinct limits; they do not establish signature validity, authorization or production safety by themselves.

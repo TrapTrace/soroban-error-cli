@@ -41,3 +41,5 @@ All contributions must include tests:
 - Place unit and mock integration tests in `tests/test_operational.py` or `tests/test_cli.py`.
 - Mock external network RPC calls using `unittest.mock.patch`.
 - Verify 100% pass rate before opening a PR: `pytest`.
+
+Implementation PRs use focused task branches, include Closes #<issue_id>, and record python3 -m pytest -q results. Simulation success and structural decoding do not establish valid signatures; no catalog verification flag may be asserted without matching error-specific execution evidence.
